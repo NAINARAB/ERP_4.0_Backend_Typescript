@@ -58,7 +58,7 @@ export type DbUser = {
   Local_User_ID: number | null;
   Company_Id: number | null;
   Name: string | null;
-  Password: string; // bcrypt hash in DB
+  Password: string;
   UserTypeId: number | null;
   UserName: string;
   UDel_Flag: number | boolean | null;
@@ -67,9 +67,9 @@ export type DbUser = {
 };
 
 export type JwtUser = {
-  sub: number;              // Global_User_ID
+  sub: number;
   username: string;
   name?: string | null;
   companyId?: number | null;
-  roleId?: number | null;   // from UserTypeId
+  roleId?: number | null;
 };

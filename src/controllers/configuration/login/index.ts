@@ -4,6 +4,8 @@ import { hashPassword, verifyPassword } from "./hash";
 import { signJwt } from "./jwtAuth";
 import { DbUser, JwtUser } from "../types";
 
+const appUsersTable = '[' + (process.env.USERPORTALDB || 'User_Portal_Test') + '].[dbo].[tbl_Users]';
+
 /**
  * POST /auth/login
  * body: { username: string, password: string }
@@ -31,11 +33,10 @@ const login = async (req: Request, res: Response) => {
                     [UDel_Flag],
                     [Created],
                     [Updated]
-                FROM [User_Portal_Test].[dbo].[tbl_Users]
+                FROM ${appUsersTable}
                 WHERE [UserName] = @username AND (ISNULL([UDel_Flag], 0) = 0)`);
 
         const user = result.recordset[0]; 
-        // console.log(result.recordset)
         if (!user) return res.status(401).json({ message: "Invalid credentials" });
         const hashedPassword = await hashPassword(user.Password);
 
