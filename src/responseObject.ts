@@ -139,6 +139,18 @@ export function invalidInput(
     });
 }
 
+export function notFound(
+    res: Response,
+    message = 'Not Found',
+    others: Others = {}
+): Response<ApiResponse> {
+    return res.status(404).json({
+        data: [],
+        message,
+        success: false,
+        others: { ...others },
+    })
+}
 export function sentData<T = any>(
     res: Response,
     data: T[] = [],

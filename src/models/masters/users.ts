@@ -9,7 +9,7 @@ export type UserAttributes = {
     UserName: string;
     Password: string;
     BranchId: number | null;
-    UDel_Flag: number | boolean | null;
+    UDel_Flag: number | null;
 };
 
 type UserCreationAttributes = Optional<UserAttributes, 'UserId' | 'UDel_Flag'>;
@@ -23,7 +23,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes>
     public UserName!: string;
     public Password!: string;
     public BranchId!: number | null;
-    public UDel_Flag!: number | boolean | null;
+    public UDel_Flag!: number | null;
 }
 
 User.init(
@@ -68,6 +68,6 @@ User.init(
         sequelize,
         tableName: 'tbl_Users',
         timestamps: false,
-        freezeTableName: true 
+        freezeTableName: true
     }
 );

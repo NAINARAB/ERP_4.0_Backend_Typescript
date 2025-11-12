@@ -38,6 +38,7 @@
     "@types/express": "^5.0.5",
     "@types/jsonwebtoken": "^8.5.9",
     "@types/mssql": "^9.1.8",
+    "@types/multer": "^2.0.0",
     "@types/node": "^24.10.0",
     "@types/sequelize": "^4.28.20",
     "nodemon": "^3.1.10",

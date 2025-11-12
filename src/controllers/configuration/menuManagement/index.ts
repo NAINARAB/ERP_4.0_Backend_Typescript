@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Request, Response } from "express";
 import { ApiMenuRow, mapDbToApi, MenuRowDB, type MenuPayload } from "../types";
 import dotenv from 'dotenv'
+import { sentData, servError } from "../../../responseObject";
 dotenv.config();
 
 const appMenuTable = '[' + (process.env.USERPORTALDB || 'User_Portal_Test') + '].[dbo].[MenuMaster]';
@@ -24,7 +25,6 @@ export function parseMenuPayload(body: any): MenuPayload {
     return parsed as MenuPayload;
 }
 
-// Helper: ensure slug unique under parent
 async function ensureUniqueSlugUnderParent(parentId: number | null, slug: string, excludeId?: number) {
     const req = new sql.Request();
     req.input("ParentId", parentId === null ? null : parentId);
@@ -43,7 +43,6 @@ async function ensureUniqueSlugUnderParent(parentId: number | null, slug: string
     }
 }
 
-// Helper: ensure parent exists (or null)
 async function ensureParentExists(parentId: number | null) {
     if (parentId === null) return;
     const request = new sql.Request()
@@ -59,7 +58,6 @@ async function ensureParentExists(parentId: number | null) {
     }
 }
 
-// Helper: prevent cycles when updating parentId
 async function assertNoCycle(menuId: number, newParentId: number | null) {
     if (newParentId === null) return;
     if (newParentId === menuId) {
@@ -91,7 +89,6 @@ async function assertNoCycle(menuId: number, newParentId: number | null) {
 
 const getMenu = async (req: Request, res: Response) => {
     try {
-        // return res.json({ message: 'get menu', status: 200 })
         const result = await new sql.Request()
             .query<MenuRowDB>(`
                 SELECT MenuId, ParentId, Slug, Title, IconKey, MenuType, IsActive, IsVisible, SortOrder, ComponentKey
@@ -100,10 +97,9 @@ const getMenu = async (req: Request, res: Response) => {
             );
 
         const rows: ApiMenuRow[] = result.recordset.map(mapDbToApi);
-        res.json(rows);
+        sentData(res, rows);
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "Failed to list menus" });
+        servError(e, res);
     }
 }
 
