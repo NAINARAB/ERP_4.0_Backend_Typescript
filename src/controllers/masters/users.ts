@@ -1,169 +1,140 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { Op } from 'sequelize';
-import { User } from '../../models/masters/users';
+import { UserMaster, userCreateSchema, userUpdateSchema, changePasswordSchema } from '../../models/masters/users';
+import { dataFound, created, updated, deleted, servError, notFound, invalidInput } from '../../responseObject';
+import { validateBody } from '../../middleware/zodValidator';
+import { hashPassword, verifyPassword } from '../configuration/login/hash';
 
-const asInt = (v: string) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : NaN;
-};
-
-/**
- * GET /api/users
- * Optional query params:
- *   - q: search in Name/UserName
- *   - page (default 1), pageSize (default 25)
- *   - includeDeleted (0/1)
- */
-export const listUsers = async (req: Request, res: Response) => {
+export const getUsers = async (req: Request, res: Response) => {
     try {
-        const q = (req.query.q as string)?.trim();
-        const page = Math.max(1, Number(req.query.page ?? 1));
-        const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize ?? 25)));
-        const includeDeleted = Number(req.query.includeDeleted ?? 0) === 1;
+        const search = req.query.search?.toString() || '';
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+        const paginate = String(req.query.paginate || 'false') === 'true';
+        const offset = (page - 1) * limit;
 
-        const where: any = {};
-        if (!includeDeleted) {
-            where[Op.or] = [{ UDel_Flag: 0 }, { UDel_Flag: null }];
-        }
-        if (q) {
-            where[Op.and] = [
-                {
-                    [Op.or]: [
-                        { Name: { [Op.like]: `%${q}%` } },
-                        { UserName: { [Op.like]: `%${q}%` } }
-                    ]
-                }
-            ];
+        const whereCondition = search
+            ? {
+                [Op.or]: [
+                    { name: { [Op.like]: `%${search}%` } },
+                    { uniqueName: { [Op.like]: `%${search}%` } },
+                ],
+            }
+            : {};
+
+        if (paginate) {
+            const { rows, count } = await UserMaster.findAndCountAll({
+                where: whereCondition,
+                limit,
+                offset,
+                order: [['id', 'DESC']],
+            });
+
+            return dataFound(res, rows, 'dataFound', {
+                totalRecords: count,
+                currentPage: page,
+                totalPages: Math.ceil(count / limit),
+            });
         }
 
-        const { rows, count } = await User.findAndCountAll({
-            where,
-            offset: (page - 1) * pageSize,
-            limit: pageSize,
-            order: [['UserId', 'DESC']]
+        const data = await UserMaster.findAll({
+            where: whereCondition,
+            order: [['id', 'DESC']],
         });
 
-        res.json({
-            data: rows,
-            page,
-            pageSize,
-            total: count,
-            totalPages: Math.ceil(count / pageSize)
-        });
-    } catch (err) {
-        console.error('listUsers error:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        dataFound(res, data);
+    } catch (e) {
+        servError(e, res);
     }
 };
 
-export const getUser = async (req: Request, res: Response) => {
+export const getUserById = async (req: Request, res: Response) => {
     try {
-        const id = asInt(req.params.id);
-        if (!Number.isFinite(id)) return res.status(400).json({ message: 'Invalid id' });
-
-        const user = await User.findOne({
-            where: {
-                UserId: id,
-                [Op.or]: [{ UDel_Flag: 0 }, { UDel_Flag: null }]
-            }
-        });
-
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        res.json(user);
-    } catch (err) {
-        console.error('getUser error:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        const { id } = req.params;
+        const user = await UserMaster.findByPk(id);
+        if (!user) return notFound(res, 'User not found');
+        dataFound(res, [user]);
+    } catch (e) {
+        servError(e, res);
     }
 };
 
 export const createUser = async (req: Request, res: Response) => {
     try {
-        const { Global_User_ID, UserTypeId, Name, UserName, Password, BranchId } = req.body;
+        const validatedData = validateBody(userCreateSchema, req.body, res);
+        if (!validatedData) return;
 
-        if (!UserName || !Password) {
-            return res.status(400).json({ message: 'UserName and Password are required' });
-        }
+        const hashed = await hashPassword(validatedData.password);
 
-        // NOTE: If you want hashing, plug bcrypt here before save.
-        // const hash = await bcrypt.hash(Password, 10);
-
-        const newUser = await User.create({
-            Global_User_ID: Global_User_ID ?? null,
-            UserTypeId: UserTypeId ?? null,
-            Name: Name ?? null,
-            UserName,
-            Password, // replace with 'hash' if hashing
-            BranchId: BranchId ?? null,
-            UDel_Flag: 0
+        const newUser = await UserMaster.create({
+            ...validatedData,
+            password: hashed,
         });
 
-        res.status(201).json(newUser);
-    } catch (err: any) {
-        console.error('createUser error:', err);
-        if (err?.name === 'SequelizeUniqueConstraintError') {
-            return res.status(400).json({ message: 'UserName already exists' });
-        }
-        res.status(500).json({ message: 'Internal server error' });
+        created(res, newUser);
+    } catch (e) {
+        servError(e, res);
     }
 };
 
 export const updateUser = async (req: Request, res: Response) => {
     try {
-        const id = asInt(req.params.id);
-        if (!Number.isFinite(id)) return res.status(400).json({ message: 'Invalid id' });
+        const validatedData = validateBody(userUpdateSchema, req.body, res);
+        if (!validatedData) return;
 
-        const user = await User.findByPk(id);
-        if (!user || user.UDel_Flag === 1) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        const { id } = req.params;
 
-        const { Global_User_ID, UserTypeId, Name, UserName, Password, BranchId } = req.body;
+        const user = await UserMaster.findByPk(id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
-        await user.update({
-            Global_User_ID: Global_User_ID ?? user.Global_User_ID,
-            UserTypeId: UserTypeId ?? user.UserTypeId,
-            Name: Name ?? user.Name,
-            UserName: UserName ?? user.UserName,
-            BranchId: BranchId ?? user.BranchId
-        });
+        delete (validatedData as any).password;
 
-        res.json(user);
-    } catch (err: any) {
-        console.error('updateUser error:', err);
-        if (err?.name === 'SequelizeUniqueConstraintError') {
-            return res.status(400).json({ message: 'UserName already exists' });
-        }
-        res.status(500).json({ message: 'Internal server error' });
+        await user.update(validatedData);
+
+        updated(res, user);
+    } catch (e) {
+        servError(e, res);
     }
 };
 
-export const softDeleteUser = async (req: Request, res: Response) => {
+
+export const deleteUser = async (req: Request, res: Response) => {
     try {
-        const id = asInt(req.params.id);
-        if (!Number.isFinite(id)) return res.status(400).json({ message: 'Invalid id' });
+        const { id } = req.params;
+        const user = await UserMaster.findByPk(id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const user = await User.findByPk(id);
-        if (!user || user.UDel_Flag === 1) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        await user.update({ UDel_Flag: 1 });
-        res.json({ message: 'User soft-deleted' });
-    } catch (err) {
-        console.error('softDeleteUser error:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        await user.destroy();
+        deleted(res);
+    } catch (e) {
+        servError(e, res);
     }
 };
 
-// export const hardDeleteUser = async (req: Request, res: Response) => {
-//     try {
-//         const id = asInt(req.params.id);
-//         if (!Number.isFinite(id)) return res.status(400).json({ message: 'Invalid id' });
-//         const deleted = await User.destroy({ where: { UserId: id } });
-//         if (!deleted) return res.status(404).json({ message: 'User not found' });
-//         res.json({ message: 'User hard-deleted' });
-//     } catch (err) {
-//         console.error('hardDeleteUser error:', err);
-//         res.status(500).json({ message: 'Internal server error' });
-//     }
-// };
+export const changePassword = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { oldPassword, newPassword } = req.body;
+
+        const user = await UserMaster.findByPk(id);
+        if (!user) return notFound(res, 'User not found');
+
+        const storedPassword: string  = (user as any).password;
+
+        if (!storedPassword) return servError(new Error('Stored password not available'), res);
+
+        const match = await verifyPassword(oldPassword, storedPassword);
+        if (!match) {
+            return invalidInput(res, 'Old password is incorrect');
+        }
+
+        const hashed = await hashPassword(newPassword);
+
+        await user.update({ password: hashed });
+
+        updated(res);
+    } catch (e) {
+        servError(e, res);
+    }
+};

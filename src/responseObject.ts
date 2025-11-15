@@ -45,7 +45,7 @@ export function noData(
     message = 'No data',
     others: Others = {}
 ): Response<ApiResponse> {
-    return res.status(200).json({
+    return res.status(204).json({
         data: [],
         message,
         success: true,
@@ -172,6 +172,47 @@ export function Unauthorized(
         data: [],
         message,
         success: false,
+        others: { ...others },
+    });
+}
+
+export function created(
+    res: Response,
+    data?: any,
+    message = 'Created',
+    others: Others = {},
+): Response<ApiResponse> {
+    return res.status(201).json({
+        data: [data],
+        message,
+        success: true,
+        others: { ...others },
+    });
+}
+
+export function updated(
+    res: Response,
+    data?: any,
+    message: string = 'Changes saved',
+    others: Others = {}
+): Response<ApiResponse> {
+    return res.status(data ? 200 : 204).json({
+        data: [data],
+        message,
+        success: true,
+        others: { ...others },
+    });
+}
+
+export function deleted(
+    res: Response,
+    message = 'Deleted',
+    others: Others = {}
+): Response<ApiResponse> {
+    return res.status(200).json({
+        data: [],
+        message,
+        success: true,
         others: { ...others },
     });
 }

@@ -1,73 +1,81 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../../config/sequalizer';
+import { z } from "zod";
 
-export type UserAttributes = {
-    UserId: number;
-    Global_User_ID: number | null;
-    UserTypeId: number | null;
-    Name: string | null;
-    UserName: string;
-    Password: string;
-    BranchId: number | null;
-    UDel_Flag: number | null;
-};
-
-type UserCreationAttributes = Optional<UserAttributes, 'UserId' | 'UDel_Flag'>;
-
-export class User extends Model<UserAttributes, UserCreationAttributes>
-    implements UserAttributes {
-    public UserId!: number;
-    public Global_User_ID!: number | null;
-    public UserTypeId!: number | null;
-    public Name!: string | null;
-    public UserName!: string;
-    public Password!: string;
-    public BranchId!: number | null;
-    public UDel_Flag!: number | null;
+export interface UserAttributes {
+    id: number;
+    userType: number;
+    name: string;
+    uniqueName: string;
+    password: string;
+    branchId: number;
+    isActive?: number | null;
 }
 
-User.init(
+type UserCreationAttributes = Optional<UserAttributes, 'id' | 'isActive'>;
+
+export class UserMaster extends Model<UserAttributes, UserCreationAttributes> {}
+
+export const userCreateSchema = z.object({
+    userType: z.number(),
+    name: z.string().min(1),
+    uniqueName: z.string().min(1),
+    password: z.string().min(6, "Password should be minimum 6 chars"),
+    branchId: z.number(),
+    isActive: z.number().nullable().optional(),
+});
+
+export const userUpdateSchema = z.object({
+    userType: z.number().optional(),
+    name: z.string().min(1).optional(),
+    uniqueName: z.string().min(1).optional(),
+    branchId: z.number().optional(),
+    isActive: z.number().nullable().optional(),
+    password: z.never().optional(),
+});
+
+export const changePasswordSchema = z.object({
+    oldPassword: z.string().min(1),
+    newPassword: z.string().min(6),
+});
+
+UserMaster.init(
     {
-        UserId: {
-            type: DataTypes.INTEGER,
+        id: {
+            type: DataTypes.BIGINT,
             autoIncrement: true,
-            primaryKey: true
+            primaryKey: true,
         },
-        Global_User_ID: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        UserTypeId: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        Name: {
-            type: DataTypes.STRING(250),
-            allowNull: true
-        },
-        UserName: {
-            type: DataTypes.STRING(100),
+        userType: {
+            type: DataTypes.BIGINT,
             allowNull: false,
-            unique: true
         },
-        Password: {
-            type: DataTypes.STRING(255),
-            allowNull: false
+        name: {
+            type: DataTypes.STRING(200),
+            allowNull: false,
         },
-        BranchId: {
+        uniqueName: {
+            type: DataTypes.STRING(200),
+            allowNull: false,
+        },
+        password: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        branchId: {
             type: DataTypes.INTEGER,
-            allowNull: true
+            allowNull: false,
         },
-        UDel_Flag: {
-            type: DataTypes.TINYINT,
+        isActive: {
+            type: DataTypes.INTEGER,
             allowNull: true,
-            defaultValue: 0
-        }
+            defaultValue: 1,
+        },
     },
     {
         sequelize,
         tableName: 'tbl_Users',
         timestamps: false,
-        freezeTableName: true
+        freezeTableName: true,
     }
 );

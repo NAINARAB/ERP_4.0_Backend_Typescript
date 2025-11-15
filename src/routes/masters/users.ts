@@ -1,18 +1,20 @@
 import { Router } from 'express';
 import {
-  listUsers,
-  getUser,
+  getUsers,
+  getUserById,
   createUser,
   updateUser,
-  softDeleteUser
+  deleteUser,
+  changePassword
 } from '../../controllers/masters/users';
 
 const router = Router();
 
-router.get('/', listUsers);
-router.get('/:id', getUser);
+router.get('/', getUsers);
+router.get('/:id', getUserById);
 router.post('/', createUser);
 router.put('/:id', updateUser);
-router.delete('/:id', softDeleteUser);
+router.delete('/:id', deleteUser);
+router.put("/:id/change-password", changePassword);
 
 export default router;
