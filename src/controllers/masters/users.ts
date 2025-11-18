@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
-import { z } from 'zod';
 import { Op } from 'sequelize';
-import { UserMaster, userCreateSchema, userUpdateSchema, changePasswordSchema } from '../../models/masters/users';
 import { dataFound, created, updated, deleted, servError, notFound, invalidInput } from '../../responseObject';
 import { validateBody } from '../../middleware/zodValidator';
+import { UserMaster, userCreateSchema, userUpdateSchema } from '../../models/masters/users';
 import { hashPassword, verifyPassword } from '../configuration/login/hash';
 
 export const getUsers = async (req: Request, res: Response) => {
@@ -97,7 +96,6 @@ export const updateUser = async (req: Request, res: Response) => {
         servError(e, res);
     }
 };
-
 
 export const deleteUser = async (req: Request, res: Response) => {
     try {

@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
-import { Product } from "../../models/masters/products";
+import { Product, productCreationSchema, productUpdateSchema } from "../../models/masters/products";
 import path from "path";
-import { success, servError } from '../../responseObject';
+import { success, servError, invalidInput, notFound, created } from '../../responseObject';
+import { validateBody } from "../../middleware/zodValidator";
+import { isNumber } from "../../middleware/helper";
 
 function buildImageColumns(file?: Express.Multer.File) {
     if (!file) return { Product_Image_Name: null, Product_Image_Path: null };
@@ -35,23 +37,16 @@ export const createProduct = async (req: Request, res: Response) => {
     try {
         const imageCols = buildImageColumns(req.file || undefined);
 
-        const {
-            Product_Code, Product_Name, Short_Name, Product_Description, Brand, Product_Group,
-            Pack_Id, UOM_Id, IS_Sold, Display_Order_By, HSN_Code, Gst_P,
-            Cgst_P, Sgst_P, Igst_P, ERP_Id, Pos_Brand_Id, IsActive,
-            Product_Rate, Max_Rate, Alter_Id, Created_By
-        } = req.body;
-
         const now = new Date();
 
-        const product = await Product.create({
-            Product_Code, Product_Name, Short_Name, Product_Description, Brand,
-            Product_Group, Pack_Id, UOM_Id, IS_Sold, Display_Order_By,
-            HSN_Code, Gst_P, Cgst_P, Sgst_P, Igst_P, ERP_Id,
-            Pos_Brand_Id, IsActive: IsActive ?? 1, Product_Rate, Max_Rate, Alter_Id, Created_By,
-            Created_Time: now, Alter_By: Created_By ?? null, Alter_Time: now,
-            ...imageCols
-        } as any);
+        const validatedData = validateBody(
+            productCreationSchema,
+            { ...req.body, ...imageCols, Created_Time: now },
+            res
+        );
+        if (!validatedData) return;
+
+        const product = await Product.create(validatedData as any);
 
         success(res, 'New product created', [product]);
     } catch (e: any) {
@@ -62,69 +57,26 @@ export const createProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
     try {
         const id = req.params.id;
+        if (!isNumber(id)) return invalidInput(res, "product id is required");
 
-        const existing = await Product.findByPk(id as any);
-        if (!existing) return res.status(404).json({ error: "Product not found" });
+        const existing = await Product.findByPk(id);
+        if (!existing) return notFound(res, "Product not found");
 
         const imageCols = req.file ? buildImageColumns(req.file) : {};
-
-        const {
-            Product_Code,
-            Product_Name,
-            Short_Name,
-            Product_Description,
-            Brand,
-            Product_Group,
-            Pack_Id,
-            UOM_Id,
-            IS_Sold,
-            Display_Order_By,
-            HSN_Code,
-            Gst_P,
-            Cgst_P,
-            Sgst_P,
-            Igst_P,
-            ERP_Id,
-            Pos_Brand_Id,
-            IsActive,
-            Product_Rate,
-            Max_Rate,
-            Alter_Id,
-            Alter_By
-        } = req.body;
-
         const now = new Date();
 
-        await existing.update({
-            Product_Code,
-            Product_Name,
-            Short_Name,
-            Product_Description,
-            Brand,
-            Product_Group,
-            Pack_Id,
-            UOM_Id,
-            IS_Sold,
-            Display_Order_By,
-            HSN_Code,
-            Gst_P,
-            Cgst_P,
-            Sgst_P,
-            Igst_P,
-            ERP_Id,
-            Pos_Brand_Id,
-            IsActive,
-            Product_Rate,
-            Max_Rate,
-            Alter_Id,
-            Alter_By: Alter_By ?? existing.getDataValue("Alter_By"),
-            Alter_Time: now,
-            ...imageCols
-        } as any);
+        const validatedData = validateBody(
+            productUpdateSchema,
+            { ...req.body, ...imageCols, Alter_Time: now },
+            res
+        );
+        if (!validatedData) return;
 
-        res.json(existing);
+        await existing.update(validatedData);
+
+        created(res, existing);
     } catch (err: any) {
-        res.status(400).json({ error: err.message || "Failed to update product" });
+        servError(err, res, "Failed to update product");
     }
 };
 
