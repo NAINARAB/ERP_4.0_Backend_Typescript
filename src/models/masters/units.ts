@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../../config/sequalizer'; // adjust path
+import { sequelize } from '../../config/sequalizer'; 
 
 export type UnitMasterTypes = {
     Unit_Id: number;
@@ -9,7 +9,7 @@ export type UnitMasterTypes = {
     Created_By: number | null;
     Created_Time: Date;
     Alter_By: number | null;
-    Alter_Time: Date | null;
+    Alter_Time: Date ;
 };
 
 type UnitMasterCreationAttributes = Optional<
@@ -28,7 +28,7 @@ export class UnitMaster
     public Created_By!: number | null;
     public Created_Time!: Date;
     public Alter_By!: number | null;
-    public Alter_Time!: Date | null;
+    public Alter_Time!: Date;
 }
 
 UnitMaster.init(
@@ -56,15 +56,16 @@ UnitMaster.init(
         },
         Created_Time: {
             type: DataTypes.DATE,
-            defaultValue: DataTypes.NOW
+              defaultValue: sequelize.literal('GETDATE()')
         },
         Alter_By: {
             type: DataTypes.INTEGER,
             allowNull: true
+            
         },
         Alter_Time: {
             type: DataTypes.DATE,
-            allowNull: true
+              defaultValue: sequelize.literal('GETDATE()')
         }
     },
     {
