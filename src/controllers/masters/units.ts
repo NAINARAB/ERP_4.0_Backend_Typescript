@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Request, Response } from 'express';
 import { UnitMaster } from '../../models/masters/units';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import { dataFound, failed, notFound, servError, success } from '../../responseObject';
 
 export const createUnitSchema = z.object({
@@ -35,7 +35,7 @@ export const createUnit = async (req: Request, res: Response) => {
 export const getUnits = async (req: Request, res: Response) => {
     try {
         const search = req.query.search?.toString() || '';
-        const pagination = req.query.pagination === 'true'; // default is false
+        const pagination = req.query.pagination === 'true'; 
 
         const whereCondition = search
             ? { Units: { [Op.like]: `%${search}%` } }
@@ -84,25 +84,23 @@ export const getUnitById = async (req: Request, res: Response) => {
     }
 };
 
-export const updateUnit = async (req: Request, res: Response) => {
+export const updateUnit = async (req, res) => {
     try {
         const validatedData = updateUnitSchema.parse(req.body);
 
         const unit = await UnitMaster.findByPk(req.params.id);
         if (!unit) return notFound(res, 'Unit not found');
 
-        validatedData['Alter_Time'] = new Date();
+        validatedData["Alter_Time"] = Sequelize.literal("GETDATE()");
 
         await unit.update(validatedData);
 
         success(res, 'Unit updated successfully', [unit]);
-    } catch (error: any) {
-        if (error.name === 'ZodError') {
-            return servError(error, res, 'Failed to update', { errors: error.errors });
-        }
+    } catch (error) {
         servError(error, res);
     }
 };
+
 
 export const deleteUnit = async (req: Request, res: Response) => {
     try {
