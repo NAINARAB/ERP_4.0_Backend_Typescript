@@ -45,7 +45,7 @@ export function noData(
     message = 'No data',
     others: Others = {}
 ): Response<ApiResponse> {
-    return res.status(204).json({
+    return res.status(200).json({
         data: [],
         message,
         success: true,

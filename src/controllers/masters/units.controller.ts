@@ -1,36 +1,10 @@
-import { z } from 'zod';
 import { Request, Response } from 'express';
-import { UnitMaster } from '../../models/masters/units';
+import { UnitMaster, UnitCreateSchema, UnitUpdateSchema } from '../../models/masters/units.model';
 import { Op } from 'sequelize';
 import { dataFound, failed, notFound, servError, success } from '../../responseObject';
+import { validateBody } from '../../middleware/zodValidator';
+import { randomNumber } from '../../middleware/helper';
 
-export const createUnitSchema = z.object({
-    Units: z.string().min(1, 'Unit name is required'),
-    ERP_Id: z.number().int().nullable().optional(),
-    Alter_Id: z.number().int().nullable().optional(),
-    Created_By: z.number().int().nullable().optional()
-});
-
-export const updateUnitSchema = z.object({
-    Units: z.string().min(1).optional(),
-    ERP_Id: z.number().int().nullable().optional(),
-    Alter_Id: z.number().int().nullable().optional(),
-    Alter_By: z.number().int().nullable().optional()
-});
-
-export const createUnit = async (req: Request, res: Response) => {
-    try {
-        const validatedData = createUnitSchema.parse(req.body);
-        const data = await UnitMaster.create(validatedData);
-
-        success(res, 'New unit created', [data]);
-    } catch (error: any) {
-        if (error.name === 'ZodError') {
-            return failed(res, 'Failed to create', { errors: error.errors });
-        }
-        servError(error, res);
-    }
-};
 
 export const getUnits = async (req: Request, res: Response) => {
     try {
@@ -84,22 +58,40 @@ export const getUnitById = async (req: Request, res: Response) => {
     }
 };
 
+export const createUnit = async (req: Request, res: Response) => {
+    try {
+        const validatedData = validateBody(
+            UnitCreateSchema,
+            { ...req.body, Alter_Id: randomNumber() },
+            res
+        );
+        if (!validatedData) return;
+
+        const data = await UnitMaster.create(validatedData);
+
+        success(res, 'New unit created', [data]);
+
+    } catch (error: any) {
+        servError(error, res);
+    }
+};
+
 export const updateUnit = async (req: Request, res: Response) => {
     try {
-        const validatedData = updateUnitSchema.parse(req.body);
+        const validatedData = validateBody(
+            UnitUpdateSchema,
+            { ...req.body, Alter_Id: randomNumber(), Alter_Time: new Date() },
+            res
+        );
+        if (!validatedData) return;
 
         const unit = await UnitMaster.findByPk(req.params.id);
         if (!unit) return notFound(res, 'Unit not found');
-
-        validatedData['Alter_Time'] = new Date();
 
         await unit.update(validatedData);
 
         success(res, 'Unit updated successfully', [unit]);
     } catch (error: any) {
-        if (error.name === 'ZodError') {
-            return servError(error, res, 'Failed to update', { errors: error.errors });
-        }
         servError(error, res);
     }
 };

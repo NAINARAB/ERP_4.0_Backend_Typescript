@@ -3,12 +3,11 @@ import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import { connectDB } from "./config/dbConfig";
-import appRoutes from './routes/routerIndex';
+import appRoutes from './routes/index.route';
 import { sequelize } from "./config/sequalizer";
 import { listRoutes } from "./config/apiDoc";
 import path from 'path';
 import fs from 'fs';
-import { staticPaths } from './staticPath'
 
 dotenv.config();
 

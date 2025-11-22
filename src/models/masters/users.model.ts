@@ -17,26 +17,25 @@ type UserCreationAttributes = Optional<UserAttributes, 'id' | 'isActive'>;
 export class UserMaster extends Model<UserAttributes, UserCreationAttributes> {}
 
 export const userCreateSchema = z.object({
-    userType: z.number(),
-    name: z.string().min(1),
-    uniqueName: z.string().min(1),
-    password: z.string().min(6, "Password should be minimum 6 chars"),
-    branchId: z.number(),
-    isActive: z.number().nullable().optional(),
+    userType: z.number('userType is required'),
+    name: z.string('Name is required').min(4, "Name should be minimum 4 chars"),
+    uniqueName: z.string('uniqueName is required').min(6, "Unique name should be minimum 6 chars"),
+    password: z.string('Password is required').min(6, "Password should be minimum 6 chars"),
+    branchId: z.number('branchId is required'),
 });
 
 export const userUpdateSchema = z.object({
-    userType: z.number().optional(),
-    name: z.string().min(1).optional(),
-    uniqueName: z.string().min(1).optional(),
-    branchId: z.number().optional(),
-    isActive: z.number().nullable().optional(),
+    userType: z.number('userType is required'),
+    name: z.string('Name is required').min(4, "Name should be minimum 4 chars").optional(),
+    uniqueName: z.string('uniqueName is required').min(6, "Unique name should be minimum 6 chars").optional(),
+    branchId: z.number('branchId is required').optional(),
+    isActive: z.number().optional(),
     password: z.never().optional(),
 });
 
 export const changePasswordSchema = z.object({
-    oldPassword: z.string().min(1),
-    newPassword: z.string().min(6),
+    oldPassword: z.string('oldPassword is required').min(1),
+    newPassword: z.string('newPassword is required').min(6),
 });
 
 UserMaster.init(
@@ -51,12 +50,13 @@ UserMaster.init(
             allowNull: false,
         },
         name: {
-            type: DataTypes.STRING(200),
+            type: DataTypes.STRING(300),
             allowNull: false,
         },
         uniqueName: {
             type: DataTypes.STRING(200),
             allowNull: false,
+            unique: true,
         },
         password: {
             type: DataTypes.TEXT,

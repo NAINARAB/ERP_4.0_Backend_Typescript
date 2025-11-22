@@ -6,11 +6,6 @@ import { DbUser, JwtUser } from "../types";
 
 const appUsersTable = '[' + (process.env.USERPORTALDB || 'User_Portal_Test') + '].[dbo].[tbl_Users]';
 
-/**
- * POST /auth/login
- * body: { username: string, password: string }
- * returns: { token: string, user: { ... } }
- */
 const login = async (req: Request, res: Response) => {
     const { username, password } = req.body as { username?: string; password?: string };
 

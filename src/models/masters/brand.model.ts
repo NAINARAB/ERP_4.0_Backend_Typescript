@@ -6,47 +6,44 @@ export interface BrandAttributes {
     Brand_Id: number;
     Brand_Name: string;
     Pro_T_Id: number;
-    Created_at: Date;
     Created_By: number;
+    Created_at?: Date;
     Alter_Id?: number | null;
     Alter_at?: Date | null;
     Alter_By?: number | null;
 }
 
-type BrandCreationAttributes = Optional<BrandAttributes, 'Brand_Id' | 'Alter_Id' | 'Alter_at' | 'Alter_By'>;
+type BrandCreationAttributes = Optional<BrandAttributes, 'Brand_Id' | 'Created_at' | 'Alter_Id' | 'Alter_at' | 'Alter_By'>;
 
 export class BrandMaster extends Model<BrandAttributes, BrandCreationAttributes> {}
 
 export const brandCreateSchema = z.object({
-    Brand_Name: z.string().min(1).max(150),
-    Pro_T_Id: z.number(),
-    Created_at: z.date(),
-    Created_By: z.number(),
-    Alter_Id: z.number().nullable().optional(),
-    Alter_at: z.date().nullable().optional(),
-    Alter_By: z.number().nullable().optional(),
+    Brand_Name: z.string().min(1, "Brand name is required").max(150, 'Brand name must be at most 150 characters'),
+    Pro_T_Id: z.number('Pro_T_Id is required'),
+    Created_By: z.number('Created_By is required'),
+    Created_at: z.date().optional(),
+    Alter_Id: z.number('Alter_Id is required'),
 });
 
 export const brandUpdateSchema = z.object({
-    Brand_Name: z.string().min(1).max(150).optional(),
+    Brand_Name: z.string().min(1, "Brand name is required").max(150, 'Brand name must be at most 150 characters'),
     Pro_T_Id: z.number().optional(),
-    Created_at: z.date().optional(),
-    Created_By: z.number().optional(),
-    Alter_Id: z.number().nullable().optional(),
-    Alter_at: z.date().nullable().optional(),
-    Alter_By: z.number().nullable().optional(),
+    Alter_Id: z.number('Alter_Id is required'),
+    Alter_at: z.date(),
+    Alter_By: z.number('Alter_By is required'),
 });
 
 BrandMaster.init(
     {
         Brand_Id: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.BIGINT,
             autoIncrement: true,
             primaryKey: true,
         },
         Brand_Name: {
             type: DataTypes.STRING(150),
             allowNull: false,
+            unique: true,
         },
         Pro_T_Id: {
             type: DataTypes.INTEGER,
@@ -55,6 +52,7 @@ BrandMaster.init(
         Created_at: {
             type: DataTypes.DATE,
             allowNull: false,
+            defaultValue: DataTypes.NOW,
         },
         Created_By: {
             type: DataTypes.INTEGER,
@@ -75,7 +73,8 @@ BrandMaster.init(
     }, {
         sequelize,
         tableName: 'tbl_Brand_Master',
+        modelName: 'BrandMaster',
         timestamps: false,
-        freezeTableName: true
+        freezeTableName: true,
     }
 )

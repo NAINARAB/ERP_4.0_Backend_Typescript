@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { Op } from 'sequelize';
-import { PackMaster } from '../../models/masters/packs';
+import { packCreateSchema, PackMaster } from '../../models/masters/packs.model';
 import { dataFound, success, servError } from '../../responseObject';
 import { Response, Request } from 'express';
-import { toNumber } from '../../middleware/helper';
+import { validateBody } from '../../middleware/zodValidator';
 
 const packSchema = z.object({
     Pack: z.string().min(1, "Pack name is required").max(50),
@@ -11,19 +11,10 @@ const packSchema = z.object({
 
 export const createPack = async (req: Request, res: Response) => {
     try {
-        const validatedData = packSchema.parse(req.body);
+        const validatedData = validateBody(packCreateSchema, req.body, res);
+        if (!validatedData) return;
 
-        const maxPack = await PackMaster.findOne({
-            attributes: ['Pack_Id'],
-            order: [['Pack_Id', 'DESC']],
-        });
-
-        const nextPackId = (maxPack?.Pack_Id ?? 0) + 1;
-
-        const newPack = await PackMaster.create({
-            Pack_Id: nextPackId,
-            ...validatedData
-        });
+        const newPack = await PackMaster.create(validatedData);
 
         success(res, 'Pack created successfully', [newPack]);
     } catch (e) {
@@ -33,20 +24,11 @@ export const createPack = async (req: Request, res: Response) => {
 
 export const getPacks = async (req: Request, res: Response) => {
     try {
-        const search = req.query.search?.toString() || '';
-
-        const page = toNumber(String(req.query?.page || '1')) || 1;
-        const limit = toNumber(String(req.query?.limit || '10')) || 10;
-        const paginate = String(req.query?.paginate || 'false') === 'true';
-        const offset = (page - 1) * limit;
-
-        const whereCondition = search
-            ? { Pack: { [Op.like]: `%${search}%` } }
-            : {};
+        const { page, limit, offset, paginate, where } = (req as any).pagination;
 
         if (paginate) {
             const { rows, count } = await PackMaster.findAndCountAll({
-                where: whereCondition,
+                where,
                 limit,
                 offset,
                 order: [['Pack_Id', 'DESC']]
@@ -60,7 +42,7 @@ export const getPacks = async (req: Request, res: Response) => {
         }
 
         const data = await PackMaster.findAll({
-            where: whereCondition,
+            where: where,
             order: [['Pack_Id', 'DESC']]
         });
 

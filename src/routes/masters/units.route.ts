@@ -1,5 +1,5 @@
 import express from 'express';
-import { createUnit, getUnits, getUnitById, updateUnit, deleteUnit } from '../../controllers/masters/units';
+import { createUnit, getUnits, getUnitById, updateUnit, deleteUnit } from '../../controllers/masters/units.controller';
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Product, productCreationSchema, productUpdateSchema } from "../../models/masters/products";
+import { Product, productCreationSchema, productUpdateSchema } from "../../models/masters/products.model";
 import path from "path";
 import { success, servError, invalidInput, notFound, created } from '../../responseObject';
 import { validateBody } from "../../middleware/zodValidator";

@@ -4,7 +4,7 @@ import {
     getBrandById,
     createBrand,
     updateBrand
-} from '../../controllers/masters/brand';
+} from '../../controllers/masters/brand.controller';
 import { paginationData } from '../../middleware/pagination';
 
 const router = Router();

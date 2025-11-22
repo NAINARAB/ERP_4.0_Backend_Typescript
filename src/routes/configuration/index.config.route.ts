@@ -1,6 +1,6 @@
 import { requireAuth } from '../../controllers/configuration/login/requireAuth';
-import appMenuRoutes from './appMenu';
-import loginRoutes from './login';
+import appMenuRoutes from './appMenu.route';
+import loginRoutes from './login.route';
 import express from 'express';
 
 const router = express.Router();

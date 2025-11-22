@@ -5,12 +5,13 @@ import {
     getPackById,
     updatePack,
     deletePack
-} from '../../controllers/masters/packs';
+} from '../../controllers/masters/packs.controller';
+import { paginationData } from '../../middleware/pagination';
 
 const router = express.Router();
 
 router.post('/', createPack);
-router.get('/', getPacks);
+router.get('/', paginationData(['Pack']), getPacks);
 router.get('/:id', getPackById);
 router.put('/:id', updatePack);
 router.delete('/:id', deletePack);

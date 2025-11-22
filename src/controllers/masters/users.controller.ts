@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { dataFound, created, updated, deleted, servError, notFound, invalidInput } from '../../responseObject';
 import { validateBody } from '../../middleware/zodValidator';
-import { UserMaster, userCreateSchema, userUpdateSchema } from '../../models/masters/users';
+import { UserMaster, userCreateSchema, userUpdateSchema } from '../../models/masters/users.model';
 import { hashPassword, verifyPassword } from '../configuration/login/hash';
 
 export const getUsers = async (req: Request, res: Response) => {

@@ -5,7 +5,7 @@ import {
   getProductById,
   updateProduct,
   deleteProduct
-} from "../../controllers/masters/products";
+} from "../../controllers/masters/products.controller";
 import { uploadProductImage } from "../../middleware/uploadMiddleware";
 
 const router = Router();

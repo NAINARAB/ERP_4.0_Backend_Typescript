@@ -1,5 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../../config/sequalizer';
+import { z } from "zod";
+import { randomNumber } from '../../middleware/helper';
 
 export type AccountMasterTypes = {
     Acc_Id: number;
@@ -14,21 +16,27 @@ export type AccountMasterTypes = {
     Alter_Time: Date;
 };
 
-type AccountMasterTypesCreationAttributes = Optional<AccountMasterTypes, 'Acc_Id'>;
+type AccountMasterTypesCreationAttributes = Optional<AccountMasterTypes, 'Acc_Id' | 'Account_Alias_name' | 'ERP_Id' | 'Created_Time' | 'Alter_Id' | 'Alter_By' | 'Alter_Time'>;
 
-export class AccountMaster extends Model<AccountMasterTypes, AccountMasterTypesCreationAttributes>
-    implements AccountMasterTypes {
-    public Acc_Id!: number;
-    public Account_name!: string;
-    public Account_Alias_name!: string;
-    public Group_Id!: number | null;
-    public ERP_Id!: number | null;
-    public Alter_Id!: number | null;
-    public Created_By!: number | null;
-    public Created_Time!: Date;
-    public Alter_By!: number | null;
-    public Alter_Time!: Date;
-}
+export class AccountMaster extends Model<AccountMasterTypes, AccountMasterTypesCreationAttributes> {}
+
+export const accountCreateSchema = z.object({
+    Account_name: z.string().min(1, 'Account name is required'),
+    Account_Alias_name: z.string().optional(),
+    Group_Id: z.number('Group_Id is required'),
+    ERP_Id: z.number().optional().nullable(),
+    Alter_Id: z.number(),
+    Created_By: z.number(),
+});
+
+export const accountUpdateSchema = z.object({
+    Account_name: z.string().min(1, 'Account name is required').optional(),
+    Account_Alias_name: z.string().optional(),
+    Group_Id: z.number().optional(),
+    ERP_Id: z.number().optional().nullable(),
+    Alter_Id: z.number(),
+    Alter_By: z.number(),
+});
 
 AccountMaster.init(
     {
@@ -55,7 +63,8 @@ AccountMaster.init(
         },
         Alter_Id: {
             type: DataTypes.INTEGER,
-            allowNull: true
+            allowNull: true,
+            defaultValue: randomNumber()
         },
         Created_By: {
             type: DataTypes.INTEGER,
@@ -78,6 +87,7 @@ AccountMaster.init(
     {
         sequelize,
         tableName: 'tbl_Account_Master',
+        modelName: 'AccountMaster',
         timestamps: false,
         freezeTableName: true
     }
