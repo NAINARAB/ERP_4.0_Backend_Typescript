@@ -1,33 +1,52 @@
 import express from 'express';
 
-import userRoutes from './users.route';
-import accoutRoutes from './accounts.route';
 
-import productGroupRoutes from './productGroup.route';
-import brandRoutes from './brand.route';
-import packRoutes from './packs.route';
-import unitRoutes from './units.route';
-import productRoutes from './products.route';
+//accounting
+import accoutRoutes from './accounting/accounts.route';
+import accountGroupRoutes from './accounting/accountGroup.route';
+import costCenterRoutes from './accounting/costCenter.route';
+import costCategoryRoutes from './accounting/costCategory.route';
+import voucherRoutes from './accounting/voucher.route';
 
-import areaRoutes from './area.route';
-import districtRoutes from './district.route';
-import stateRoutes from './state.route';
-import routeRoutes from './routes.route';
+//products
+import productGroupRoutes from './product/productGroup.route';
+import brandRoutes from './product/brand.route';
+import packRoutes from './product/packs.route';
+import unitRoutes from './product/units.route';
+import productRoutes from './product/products.route';
+
+//users
+import userRoutes from './users/users.route';
+import areaRoutes from './users/area.route';
+import districtRoutes from './users/district.route';
+import stateRoutes from './users/state.route';
+import routeRoutes from './users/routes.route';
+import branchRoutes from './users/branch.route';
+import userTypeRoutes from './users/userType.route';
 
 const router = express.Router();
 
-router.use('/users', userRoutes);
+//accounting
 router.use('/accounts', accoutRoutes);
+router.use('/accountGroup', accountGroupRoutes);
+router.use('/costCenter', costCenterRoutes);
+router.use('/costCategory', costCategoryRoutes);
+router.use('/voucher', voucherRoutes);
 
+//products
 router.use('/productGroup', productGroupRoutes);
 router.use('/brand', brandRoutes);
 router.use('/packs', packRoutes);
 router.use('/units', unitRoutes);
 router.use('/products', productRoutes);
 
+//users
+router.use('/users', userRoutes);
 router.use('/area', areaRoutes);
 router.use('/district', districtRoutes);
 router.use('/state', stateRoutes);
 router.use('/route', routeRoutes);
+router.use('/branch', branchRoutes);
+router.use('/userType', userTypeRoutes);
 
 export default router;

@@ -74,22 +74,10 @@ export function servError(
 ): Response<ApiResponse> {
     const req: Request | undefined = res.req;
 
-    // Redact sensitive data
     const safeBody: Record<string, any> = { ...(req?.body ?? {}) };
     for (const key of ['password', 'token', 'otp']) {
         if (key in safeBody) safeBody[key] = '[redacted]';
     }
-
-    const mssqlInfo = {
-        code: e.code,
-        number: e.number ?? e?.originalError?.info?.number,
-        lineNumber: e.lineNumber ?? e?.originalError?.info?.lineNumber,
-        state: e.state ?? e?.originalError?.info?.state,
-        class: e.class ?? e?.originalError?.info?.class,
-        serverName: e.serverName ?? e?.originalError?.info?.serverName,
-        procName: e.procName ?? e?.originalError?.info?.procName,
-        message: e.message,
-    };
 
     const durationMs = res.locals.startedAt
         ? Number(process.hrtime.bigint() - res.locals.startedAt) / 1e6
@@ -98,7 +86,6 @@ export function servError(
     console.error({
         level: 'error',
         msg: 'request_failed',
-        requestId: res.locals.requestId,
         method: req?.method,
         url: req?.originalUrl,
         baseUrl: req?.baseUrl,
@@ -106,9 +93,6 @@ export function servError(
         params: req?.params,
         query: req?.query,
         body: safeBody,
-        sql: e?.sql,
-        sqlParams: e?.sqlParams,
-        mssql: mssqlInfo,
         stack: e.stack,
         actualError: e,
     });
@@ -151,6 +135,20 @@ export function notFound(
         others: { ...others },
     })
 }
+
+export function invalidCredentials(
+    res: Response,
+    message = 'Invalid credentials',
+    others: Others = {}
+): Response<ApiResponse> {
+    return res.status(401).json({
+        data: [],
+        message,
+        success: false,
+        others: { ...others },
+    })
+}
+
 export function sentData<T = any>(
     res: Response,
     data: T[] = [],

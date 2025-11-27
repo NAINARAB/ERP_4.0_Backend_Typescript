@@ -1,62 +1,51 @@
 import { Request, Response } from "express";
-import sql from "mssql";
 import { hashPassword, verifyPassword } from "./hash";
 import { signJwt } from "./jwtAuth";
-import { DbUser, JwtUser } from "../types";
+import { UserMaster } from "../../../models/masters/users/users.model";
+import { dataFound, invalidInput, notFound, servError } from "../../../responseObject";
 
-const appUsersTable = '[' + (process.env.USERPORTALDB || 'User_Portal_Test') + '].[dbo].[tbl_Users]';
+export type JwtUser = {
+    id: number;
+    userType: number;
+    name: string;
+    uniqueName: string;
+    branchId: number;
+};
 
-const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response) => {
     const { username, password } = req.body as { username?: string; password?: string };
 
-    if (!username || !password) {
-        return res.status(400).json({ message: "username and password are required" });
-    }
-
     try {
-        const result = await new sql.Request()
-            .input("username", sql.VarChar, username)
-            .query<DbUser>(`
-                SELECT TOP 1
-                    [Global_User_ID],
-                    [Local_User_ID],
-                    [Company_Id],
-                    [Name],
-                    [Password],
-                    [UserTypeId],
-                    [UserName],
-                    [UDel_Flag],
-                    [Created],
-                    [Updated]
-                FROM ${appUsersTable}
-                WHERE [UserName] = @username AND (ISNULL([UDel_Flag], 0) = 0)`);
 
-        const user = result.recordset[0]; 
-        if (!user) return res.status(401).json({ message: "Invalid credentials" });
-        const hashedPassword = await hashPassword(user.Password);
+        if (!username || !password) return invalidInput(res, 'username and password are required');
 
-        const ok = await verifyPassword(password, hashedPassword);
-        if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+        const user = await UserMaster.findOne({
+            where: {
+                uniqueName: username,
+                isActive: 1
+            }
+        });
+
+        if (!user) return notFound(res, 'Invalid credentials');
+
+        const passwordCheck = await verifyPassword(password, user.password);
+        if (!passwordCheck) return notFound(res, 'Invalid credentials');
 
         const payload: JwtUser = {
-            sub: user.Global_User_ID,
-            username: user.UserName,
-            name: user.Name,
-            companyId: user.Company_Id ?? undefined,
-            roleId: user.UserTypeId ?? undefined
+            id: user.id,
+            userType: user.userType,
+            name: user.name,
+            uniqueName: user.uniqueName,
+            branchId: user.branchId,
         };
 
         const token = signJwt(payload);
-        return res.json({
-            token,
-            user: payload
+
+        dataFound(res, [], 'dataFound', {
+            token, user: payload
         });
+
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Server error" });
+        servError(err, res);
     }
 }
-
-export default {
-    login
-};

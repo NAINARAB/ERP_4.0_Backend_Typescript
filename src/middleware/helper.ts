@@ -88,7 +88,7 @@ export const isValidJSON = (str: string): boolean => {
     }
 }
 
-export const randomNumber = (range: number = 10000000) => Math.floor(Math.random() * range) + 1;
+export const randomNumber = (range: number = 10000000): number => Math.floor(Math.random() * range) + 1;
 
 export const isEqualNumber = (a: number | string, b: number | string): boolean => {
     return Number(a) === Number(b)

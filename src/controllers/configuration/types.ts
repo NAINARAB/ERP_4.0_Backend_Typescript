@@ -11,7 +11,6 @@ export interface MenuRowDB {
     ComponentKey: string | null;
 }
 
-
 export interface MenuPayload {
     parentId: number | null;
     slug: string;
@@ -23,7 +22,6 @@ export interface MenuPayload {
     sortOrder: number | null;
     componentKey: string | null;
 }
-
 
 export interface ApiMenuRow {
     menuId: number;
@@ -54,22 +52,16 @@ export function mapDbToApi(r: MenuRowDB): ApiMenuRow {
 }
 
 export type DbUser = {
-  Global_User_ID: number;
-  Local_User_ID: number | null;
-  Company_Id: number | null;
-  Name: string | null;
-  Password: string;
-  UserTypeId: number | null;
-  UserName: string;
-  UDel_Flag: number | boolean | null;
-  Created: Date | null;
-  Updated: Date | null;
+    Global_User_ID: number;
+    Local_User_ID: number | null;
+    Company_Id: number | null;
+    Name: string | null;
+    Password: string;
+    UserTypeId: number | null;
+    UserName: string;
+    UDel_Flag: number | boolean | null;
+    Created: Date | null;
+    Updated: Date | null;
 };
 
-export type JwtUser = {
-  sub: number;
-  username: string;
-  name?: string | null;
-  companyId?: number | null;
-  roleId?: number | null;
-};
+
