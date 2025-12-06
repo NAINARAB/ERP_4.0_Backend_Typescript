@@ -21,7 +21,11 @@ export type VoucherTypeTypes = {
     tally_sync: number | null;
 };
 
-type VoucherTypeCreationAttributes = Optional<VoucherTypeTypes, 'Voucher_Type_Id' | 'Tally_Id' | 'Alter_By' | 'Alter_Time' | 'tally_sync'>;
+type VoucherTypeCreationAttributes = Optional<
+    VoucherTypeTypes, 
+    'Voucher_Type_Id' | 'Tally_Id' | 'Created_Time' 
+    | 'Alter_By' | 'Alter_Time' | 'tally_sync'
+>;
 
 export class VoucherTypeMaster extends Model<VoucherTypeTypes, VoucherTypeCreationAttributes> { }
 

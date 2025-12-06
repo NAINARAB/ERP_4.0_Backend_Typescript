@@ -108,7 +108,7 @@ AccountGroupMaster.init(
     }
 );
 
-AccountGroupMaster.hasMany(AccountGroupMaster, { as: "ChildGroups", foreignKey: 'Parent_AC_id', sourceKey: 'Group_Id' });
+AccountGroupMaster.belongsTo(AccountGroupMaster, { as: "ParentGroup", foreignKey: 'Parent_AC_id', targetKey: 'Group_Id' });
 AccountGroupMaster.belongsTo(UserMaster, { foreignKey: "Created_By", targetKey: "id", });
 AccountGroupMaster.belongsTo(UserMaster, { foreignKey: "Alter_By", targetKey: "id", });
 

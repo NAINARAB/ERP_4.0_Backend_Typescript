@@ -5,7 +5,7 @@ import { productGroupAccKey, ProductGroupMaster } from "../../../models/masters/
 import { packAccKey, PackMaster } from "../../../models/masters/product/packs.model";
 import { unitAccKey, UnitMaster } from "../../../models/masters/product/units.model";
 import path from "path";
-import { sentData, servError, invalidInput, notFound, created, updated } from '../../../responseObject';
+import { sentData, servError, invalidInput, notFound, created, updated, deleted } from '../../../responseObject';
 import { validateBody } from "../../../middleware/zodValidator";
 import { isNumber, randomNumber } from "../../../middleware/helper";
 import { Sequelize } from "sequelize";
@@ -166,20 +166,20 @@ export const updateProduct = async (req: Request, res: Response) => {
     }
 };
 
-// export const deleteProduct = async (req: Request, res: Response) => {
-//     try {
-//         const { id } = req.params;
-//         if (!isNumber(id)) return invalidInput(res, 'id parameter is required');
-//
-//         const product = await Product.findByPk(id);
-//         if (!product) return notFound(res, 'Product not found');
-//
-//         await product.destroy();
-//         deleted(res);
-//     } catch (e) {
-//         servError(e, res);
-//     }
-// };
+export const deleteProduct = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        if (!isNumber(id)) return invalidInput(res, 'id parameter is required');
+
+        const product = await Product.findByPk(id);
+        if (!product) return notFound(res, 'Product not found');
+
+        await product.destroy();
+        deleted(res);
+    } catch (e) {
+        servError(e, res);
+    }
+};
 
 export const softDeleteProduct = async (req: Request, res: Response) => {
     try {

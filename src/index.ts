@@ -8,6 +8,7 @@ import { sequelize } from "./config/sequalizer";
 import { listRoutes } from "./config/apiDoc";
 import path from 'path';
 import fs from 'fs';
+import { createUploadFolders } from "./middleware/createUploadFolders";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
 connectDB();
+createUploadFolders();
 
 (async () => {
     try {
@@ -35,21 +37,6 @@ connectDB();
         console.error('seqalizer initialization failed', err);
     }
 })();
-
-const uploadsRoot = path.resolve(process.cwd(), "uploads");
-if (!fs.existsSync(uploadsRoot)) fs.mkdirSync(uploadsRoot);
-
-const productsDir = path.join(uploadsRoot, "products");
-const attendanceDir = path.join(uploadsRoot, "attendance");
-const forumDocumentDir = path.join(uploadsRoot, "forumDocuments");
-const retailerDir = path.join(uploadsRoot, "retailers");
-const visitLogDir = path.join(uploadsRoot, "visitLogs");
-
-if (!fs.existsSync(productsDir)) fs.mkdirSync(productsDir);
-if (!fs.existsSync(attendanceDir)) fs.mkdirSync(attendanceDir);
-if (!fs.existsSync(forumDocumentDir)) fs.mkdirSync(forumDocumentDir);
-if (!fs.existsSync(retailerDir)) fs.mkdirSync(retailerDir);
-if (!fs.existsSync(visitLogDir)) fs.mkdirSync(visitLogDir);
 
 app.use('/api', appRoutes);
 
@@ -62,7 +49,7 @@ app.use('/api', (req, res) => {
     }
 });
 
-const reactBuildPath = path.join(__dirname, 'frontend');
+const reactBuildPath = path.join(__dirname, '../frontend');
 app.use(express.static(reactBuildPath));
 
 // staticPaths.forEach(({ route, folder }) => {

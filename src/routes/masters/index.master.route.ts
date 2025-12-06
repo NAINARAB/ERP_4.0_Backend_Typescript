@@ -1,6 +1,5 @@
 import express from 'express';
 
-
 //accounting
 import accoutRoutes from './accounting/accounts.route';
 import accountGroupRoutes from './accounting/accountGroup.route';
@@ -14,6 +13,7 @@ import brandRoutes from './product/brand.route';
 import packRoutes from './product/packs.route';
 import unitRoutes from './product/units.route';
 import productRoutes from './product/products.route';
+import godownRoutes from './product/godown.route';
 
 //users
 import userRoutes from './users/users.route';
@@ -23,6 +23,7 @@ import stateRoutes from './users/state.route';
 import routeRoutes from './users/routes.route';
 import branchRoutes from './users/branch.route';
 import userTypeRoutes from './users/userType.route';
+import retailerRoutes from './users/retailer.route';
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ router.use('/brand', brandRoutes);
 router.use('/packs', packRoutes);
 router.use('/units', unitRoutes);
 router.use('/products', productRoutes);
+router.use('/godown', godownRoutes);
 
 //users
 router.use('/users', userRoutes);
@@ -48,5 +50,6 @@ router.use('/state', stateRoutes);
 router.use('/route', routeRoutes);
 router.use('/branch', branchRoutes);
 router.use('/userType', userTypeRoutes);
+router.use('/retailer', retailerRoutes);
 
 export default router;
