@@ -93,6 +93,9 @@ UserMaster.init(
         modelName: modelName,
         timestamps: false,
         freezeTableName: true,
+        defaultScope: {
+            attributes: { exclude: ['password'] }
+        }
     }
 );
 
